@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("dns").setDefaultResultOrder("ipv4first");
 var mysql = require("mysql2");
 var express = require("express");
 var app = express();
