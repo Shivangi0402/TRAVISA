@@ -61,29 +61,39 @@ function Services() {
   ];
 
   var bookdest = (id, price) => {
+    const user = JSON.parse(localStorage.getItem("mydata"));
+
+    if (!user || !user.email) {
+      alert("Please login before booking.");
+      window.location = "/login";
+      return;
+    }
+
     var merchant_order_id = "123";
+
     var options = {
       key: process.env.REACT_APP_RAZORPAY_KEY_ID,
-      amount: price * 100, // 2000 paise = INR 20
+      amount: price * 100,
       name: "IT",
       description: "Booking for destination.",
 
       currency: "INR",
       netbanking: true,
+
       prefill: {
-        name: "Shivangi Sinha",
-        email: "shivangi.bgp2004@gmail.com",
-        contact: 8128399635,
+        name: user.name,
+        email: user.email,
       },
+
       notes: {
         soolegal_order_id: merchant_order_id,
       },
+
       handler: function (response) {
-        //alert("Payment Success");
         Axios.post(`${process.env.REACT_APP_API_URL}/api/save_booking`, {
           id: id,
           price: price,
-          email: "shivangi.bgp2004@gmail.com",
+          email: user.email,
         }).then((response) => {
           if (response.data.message) {
             alert(response.data.message);
