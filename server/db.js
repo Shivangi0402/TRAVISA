@@ -10,16 +10,14 @@ const path = require("path");
 app.use("/public", express.static("public"));
 var nodemailer = require("nodemailer");
 
-var con = mysql.createConnection({
+var con = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: process.env.DB_PORT || 3306,
 });
-con.connect(function () {
-  console.log("I am Connected");
-});
+
 
 const storage = multer.diskStorage({
   destination: path.join(__dirname, "./public/"),
