@@ -1,5 +1,5 @@
 require("dotenv").config();
-var mysql = require("mysql");
+var mysql = require("mysql2");
 var express = require("express");
 var app = express();
 var cors = require("cors");
