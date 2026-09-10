@@ -1,8 +1,5 @@
 require("dotenv").config();
 
-const dns = require("dns");
-dns.setDefaultResultOrder("ipv4first");
-
 var mysql = require("mysql2");
 var express = require("express");
 var app = express();
@@ -16,7 +13,7 @@ const path = require("path");
 
 app.use("/public", express.static("public"));
 
-var nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
 var con = mysql.createPool({
   host: process.env.DB_HOST,
@@ -33,6 +30,7 @@ const storage = multer.diskStorage({
   },
 });
 
+// REGISTER
 app.post("/api/register", (req, resp) => {
   var name = req.body.name;
   var email = req.body.email;
@@ -48,7 +46,9 @@ app.post("/api/register", (req, resp) => {
     }
 
     if (result.length > 0) {
-      return resp.status(409).json({ message: "Email already registered" });
+      return resp.status(409).json({
+        message: "Email already registered",
+      });
     }
 
     const insertQuery =
@@ -67,6 +67,7 @@ app.post("/api/register", (req, resp) => {
   });
 });
 
+// LOGIN / VERIFY
 app.post("/api/verify", (req, resp) => {
   var email = req.body.email;
   var password = req.body.password;
@@ -74,43 +75,64 @@ app.post("/api/verify", (req, resp) => {
   const query = "Select * from customers where email=? and password=?";
 
   con.query(query, [email, password], (err, result) => {
+    if (err) {
+      console.error("Login database error:", err);
+      return resp.status(500).send("Database error");
+    }
+
     if (result.length > 0) {
       resp.send(result);
     } else {
-      resp.send({ message: "Invalid Email or Password" });
+      resp.send({
+        message: "Invalid Email or Password",
+      });
     }
   });
 });
 
+// ADD SERVICE
 app.post("/api/postservice", (req, resp) => {
   let upload = multer({ storage: storage }).single("npimg");
 
   upload(req, resp, function (err) {
+    if (err) {
+      console.error("Upload error:", err);
+      return resp.status(500).send("Upload failed");
+    }
+
     if (!req.file) {
       console.log("not found");
-    } else {
-      var name = req.body.name;
-      var city = req.body.city;
-      var price = req.body.price;
-      var desc = req.body.desc;
-      var img = req.file.filename;
+      return resp.status(400).send("Image not found");
+    }
 
-      const query =
-        "Insert into service (name,city,price,description,img) values(?,?,?,?,?)";
+    var name = req.body.name;
+    var city = req.body.city;
+    var price = req.body.price;
+    var desc = req.body.desc;
+    var img = req.file.filename;
 
-      con.query(query, [name, city, price, desc, img]);
+    const query =
+      "Insert into service (name,city,price,description,img) values(?,?,?,?,?)";
+
+    con.query(query, [name, city, price, desc, img], (err) => {
+      if (err) {
+        console.error("Service insert error:", err);
+        return resp.status(500).send("Service insert failed");
+      }
 
       resp.json("");
-    }
+    });
   });
 });
 
+// GET SERVICES
 app.get("/api/service_get", (req, resp) => {
   const ins = "select * from service";
 
   con.query(ins, (err, result) => {
     if (err) {
       console.error("Database error:", err);
+
       return resp.status(500).json({
         error: "Database fetch failed",
       });
@@ -126,91 +148,74 @@ app.get("/api/service_get", (req, resp) => {
   });
 });
 
+// SAVE BOOKING + SEND EMAIL USING RESEND
 app.post("/api/save_booking", (req, resp) => {
   var id = req.body.id;
   var price = req.body.price;
   var email = req.body.email;
 
-  // Insert the booking
   const insertQuery = "INSERT INTO booking (id, price) VALUES (?, ?)";
 
-  con.query(insertQuery, [id, price], (err, result) => {
+  con.query(insertQuery, [id, price], async (err, result) => {
     if (err) {
-      console.log(err);
+      console.log("Booking database error:", err);
       return resp.status(500).send("Database Insert Error");
     }
 
     const bookingId = result.insertId;
 
-    // Resolve Gmail to IPv4 before creating the SMTP connection
-    dns.lookup(
-      "smtp.gmail.com",
-      { family: 4 },
-      (lookupErr, address) => {
-        if (lookupErr) {
-          console.log("Gmail IPv4 lookup failed:", lookupErr);
-          return resp.status(500).send("SMTP connection failed");
-        }
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
 
-        console.log("Gmail IPv4 address:", address);
+      const { data, error } = await resend.emails.send({
+        from: "TRAVISA <onboarding@resend.dev>",
+        to: [email],
+        subject: "Booking Success",
+        html: `
+          <div>
+            <h2>Booking Successful!</h2>
 
-        const Smtp = nodemailer.createTransport({
-          host: address,
-          port: 587,
-          secure: false,
-
-          tls: {
-            servername: "smtp.gmail.com",
-          },
-
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASSWORD,
-          },
-        });
-
-        const message = {
-          from: process.env.SMTP_USER,
-          to: email,
-          subject: "Booking Success",
-          html: `
             <p>
               Your destination booking was successful.
-              <br>
-              <h2>Booking ID: ${bookingId}</h2>
             </p>
+
+            <h2>Booking ID: ${bookingId}</h2>
 
             <p>
               Please do not share this email with anyone for security reasons.
             </p>
 
-            <i>
+            <p>
               If you have any questions, contact support.
-            </i>
+            </p>
 
             <p>
               Thank you!
             </p>
-          `,
-        };
+          </div>
+        `,
+      });
 
-        Smtp.sendMail(message, (err, info) => {
-          if (err) {
-            console.log("Email sending error:", err);
-            return resp.status(500).send("Email sending failed");
-          }
+      if (error) {
+        console.log("Resend email error:", error);
 
-          console.log("Email sent successfully:", info.messageId);
-
-          return resp.send({
-            message: "Email Sent Successfully",
-          });
-        });
+        return resp.status(500).send("Email sending failed");
       }
-    );
+
+      console.log("Resend email sent successfully:", data);
+
+      return resp.send({
+        message: "Email Sent Successfully",
+      });
+    } catch (error) {
+      console.log("Resend error:", error);
+
+      return resp.status(500).send("Email sending failed");
+    }
   });
 });
 
+// START SERVER
 const PORT = process.env.PORT || 2040;
 
 app.listen(PORT, () => {
