@@ -117,6 +117,7 @@ app.post("/api/save_booking", (req, resp) => {
       host: "smtp.gmail.com",
       port: 587,
       secure: false,
+      family: 4,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD,
