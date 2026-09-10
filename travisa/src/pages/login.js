@@ -1,3 +1,4 @@
+/* eslint-disable no-whitespace-before-property */
 import React from 'react';
 import Axios from 'axios';
 import Swal from 'sweetalert2';
