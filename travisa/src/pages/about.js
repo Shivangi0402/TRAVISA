@@ -27,7 +27,7 @@ function About(){
         </p>
 
             <div class="btn-box">
-                <a>Read More</a>
+                <a href="/about">Read More</a>
             </div>
             </div>
         </div>

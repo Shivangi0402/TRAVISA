@@ -15,7 +15,7 @@ function Login() {
         var email = document.getElementById("email").value;
         var password = document.getElementById("password").value;
 
-        Axios.post(`${process.env.REACT_APP_API_URL}/api/verify`,{
+        Axios["post"](`${process.env.REACT_APP_API_URL}/api/verify`, {
             email:email,password:password
         }) .then((response) =>
             {

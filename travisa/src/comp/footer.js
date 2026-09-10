@@ -23,19 +23,19 @@ function Footer() {
             <div className="col-md-3 info_info">
                 <h5>Contact Us</h5>
                 <div className="info_contact">
-                <a href="#"><i className="fa fa-map-marker"></i><span>Address: 123 Explorer Lane, Wanderlust City, World</span></a>
-                <a href="#"><i className="fa fa-phone"></i><span>Phone: +91 9876543210</span></a>
-                <a href="#"><i className="fa fa-envelope"></i><span>Email: support@travisa.com</span></a>
+                <a href="/contact"><i className="fa fa-map-marker"></i><span>Address: 123 Explorer Lane, Wanderlust City, World</span></a>
+                <a href="/contact"><i className="fa fa-phone"></i><span>Phone: +91 9876543210</span></a>
+                <a href="/contact"><i className="fa fa-envelope"></i><span>Email: support@travisa.com</span></a>
                 </div>
             </div>
             <div className="col-md-3 info_form">
                 <h5>Newsletter</h5>
                 <form action="#"><input type="email" placeholder="Enter your email" /><button >Subscribe</button></form>
                 <div className="social_box">
-                <a href="#"><i className="fa fa-facebook"></i></a>
-                <a href="#"><i className="fa fa-twitter"></i></a>
-                <a href="#"><i className="fa fa-youtube"></i></a>
-                <a href="#"><i className="fa fa-instagram"></i></a>
+                <a href="/home"><i className="fa fa-facebook"></i></a>
+                <a href="/home"><i className="fa fa-twitter"></i></a>
+                <a href="/home"><i className="fa fa-youtube"></i></a>
+                <a href="/home"><i className="fa fa-instagram"></i></a>
                 </div>
             </div>
             </div>

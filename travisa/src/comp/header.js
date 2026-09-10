@@ -16,7 +16,7 @@ function Header(){
     <div class="header_top">
       <div class="container-fluid">
         <div class="contact_link-container">
-          <a class="contact_link1">
+          <a href="/contact" class="contact_link1">
             <i class="fa fa-map-marker" aria-hidden="true"></i>
             <span>Panchmahal,Gujarat</span>
           </a>
@@ -34,7 +34,7 @@ function Header(){
             <a href="/register" class="green-button">Welcome : {customer && customer.name}</a>
         </div>
         <div class="d-lg-block d-none">
-            <a class="green-button" onClick={logout}>Logout</a>
+            <a href="/home" class="green-button" onClick={logout}>Logout</a>
         </div>
         </>
         }
